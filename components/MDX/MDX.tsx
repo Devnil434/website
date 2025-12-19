@@ -38,6 +38,7 @@ import NewsletterSubscribe from '../NewsletterSubscribe';
 import Profiles from '../Profiles';
 import Remember from '../Remember';
 import Sponsors from '../sponsors/PlatinumSponsors';
+import SpecVersion from '../SpecVersion';
 import Warning from '../Warning';
 import { Table, TableBody, TableCell, TableHeader, TableRow, Thead } from './MDXTable';
 
@@ -327,10 +328,19 @@ const getMDXComponents = {
   TwitterVideoEmbed,
   TwitterOnAirButton,
   Profiles,
+  SpecVersion,
   Visualizer
 };
 
 export const mdxComponents = getMDXComponents;
+
+// Export the useMDXComponents function for Next.js MDX configuration
+export function useMDXComponents(components: any) {
+  return {
+    ...mdxComponents,
+    ...components,
+  };
+}
 
 interface MDXProviderProps {
   children: React.ReactNode;

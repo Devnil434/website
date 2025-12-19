@@ -1,110 +1,99 @@
-import moment from 'moment';
-import ErrorPage from 'next/error';
-import HtmlHead from 'next/head';
-import { useRouter } from 'next/router';
-import React from 'react';
+import { MDXRemoteSerializeResult } from 'next-mdx-remote';
+import Head from 'next/head';
+import Script from 'next/script';
+import React, { useContext } from 'react';
 
-import type { IPosts } from '@/types/post';
+import AppContext from '@/context/AppContext';
+import { IBlog, IBlogPost } from '@/types/post';
+import { HeadingLevel, HeadingTypeStyle } from '@/types/typography/Heading';
+import { ParagraphTypeStyle } from '@/types/typography/Paragraph';
 
+import AuthorAvatars from '../../components/AuthorAvatars';
+import Container from '../../components/layout/Container';
 import BlogContext from '../../context/BlogContext';
-import AuthorAvatars from '../AuthorAvatars';
-import AnnouncementHero from '../campaigns/AnnouncementHero';
-import Head from '../Head';
-import TOC from '../TOC';
-import Container from './Container';
+import Heading from '../typography/Heading';
+import Paragraph from '../typography/Paragraph';
 
 interface IBlogLayoutProps {
-  post: IPosts['blog'][number];
+  post: IBlogPost;
   children: React.ReactNode;
-  navItems?: IPosts['blog'];
+  seo?: any; // SEO properties
+  source?: MDXRemoteSerializeResult;
+  navItems?: IBlog; // Navigation items for blog posts
 }
 
 /**
- * @description The blog layout with the post and its content
- * @param {IPosts['blog'][number]} props.post - The post
- * @param {React.ReactNode} props.children - The children
+ * @description The layout for the blog pages.
+ * @param props.post - The blog post data
+ * @param props.children - The content of the blog post
+ * @param props.seo - The SEO data for the blog post
+ * @param props.source - The MDX source for the blog post
+ * @param props.navItems - Navigation items for blog posts
  */
-export default function BlogLayout({ post, children }: IBlogLayoutProps) {
-  const router = useRouter();
-
-  if (!post) return <ErrorPage statusCode={404} />;
-  if (post.title === undefined) throw new Error('Post title is required');
-
-  if (!router.isFallback && !post?.slug) {
-    return <ErrorPage statusCode={404} />;
-  }
+export default function BlogLayout({ post, children, seo, source, navItems }: IBlogLayoutProps) {
+  const appContext = useContext(AppContext);
+  const { path = '' } = appContext || {};
 
   return (
-    <BlogContext.Provider value={{ post }}>
-      <AnnouncementHero className='mx-8 my-4' />
-      <Container cssBreakingPoint='lg' flex flexReverse>
-        <TOC
-          toc={post.toc}
-          cssBreakingPoint='lg'
-          className={`sticky top-20 mt-4 max-h-screen overflow-y-auto bg-blue-100 p-4 lg:top-24
-            lg:-mr-20 lg:mt-2 lg:max-h-(screen-16) lg:min-w-40 lg:max-w-64 lg:border-l lg:border-gray-200
-            lg:bg-transparent lg:pb-8 lg:pt-0 xl:-mr-36 xl:min-w-72`}
-        />
-        <main className='mt-8 px-4 sm:px-6 lg:max-w-172 lg:flex-1 lg:pl-0 lg:pr-8 xl:max-w-172'>
-          <header className='pr-4 sm:pr-6 md:pr-8'>
-            <h1 className='font-normal font-sans text-4xl text-gray-800 antialiased' data-testid='BlogLayout-main'>
-              {post.title}
-            </h1>
-            <div className='mt-6 flex items-center'>
-              <div className='relative shrink-0'>
-                <AuthorAvatars authors={post.authors} />
-              </div>
-              <div className='ml-3'>
-                <p className='text-sm font-medium leading-5 text-gray-900'>
-                  <span className='hover:underline'>
-                    {post.authors
-                      .map((author, index) =>
-                        author.link ? (
-                          <a key={index} href={author.link}>
-                            {author.name}
-                          </a>
-                        ) : (
-                          author.name
-                        )
-                      )
-                      .reduce((prev, curr) => [prev, ' & ', curr] as any)}
-                  </span>
-                </p>
-                <div className='flex text-sm leading-5 text-gray-500'>
-                  <time dateTime={post.date}>{moment(post.date).format('MMMM D, YYYY')}</time>
-                  <span className='mx-1'>&middot;</span>
+    <BlogContext.Provider value={{ post, navItems }}>
+      <Container cssBreakingPoint='lg' wide>
+        <Head>
+          {post.canonical && <link rel='canonical' href={post.canonical} />}
+        </Head>
+        <main className='mx-auto mt-5 w-full lg:mt-10' data-testid='Blog-layout'>
+          <header className='mb-10 md:mb-16'>
+            <div className='mb-4'>
+              <Heading level={HeadingLevel.h1} typeStyle={HeadingTypeStyle.lg}>
+                {post.title}
+              </Heading>
+            </div>
+            <div className='flex flex-col items-start justify-between md:flex-row md:items-center'>
+              <div>
+                <div className='flex items-center space-x-2'>
+                  <AuthorAvatars authors={post.authors} />
+                  {post.date && (
+                    <time dateTime={post.date} className='text-sm leading-6 text-gray-500'>
+                      {new Date(post.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </time>
+                  )}
+                </div>
+                <div className='mt-2 flex items-center text-sm leading-6 text-gray-500'>
+                  {post.tags && (
+                    <div className='mr-4 flex space-x-2'>
+                      {post.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className='rounded-md bg-gray-200 px-2 py-1 text-xs font-medium text-gray-800'
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <span>{post.readingTime} min read</span>
                 </div>
               </div>
             </div>
           </header>
           <article className='mb-32'>
-            <Head title={post.title} description={post.excerpt} image={post.cover} />
-            <HtmlHead>
-              <script
-                type='text/javascript'
-                src='//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5cb852c7b57ed596'
-                async
-              />
-              <style>{`
-                /* AddThis hack */
-
-                #at4-share {
-                    left: 50%;
-                    margin-left: -500px !important;
-                    position: absolute;
-
-                    &amp;.addthis-animated {
-                      animation-duration: 0s !important;
-                    }
-                }
-
-                #at4-scc {
-                    display: none !important;
-                }
-              `}</style>
-              {post.canonical && <link rel='canonical' href={post.canonical} />}
-            </HtmlHead>
+            <Script
+              src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5cb852c7b57ed596"
+              strategy="afterInteractive"
+            />
+            <style>{`
+              /* AddThis hack */
+              #at4-share {
+                  left: 50%;
+                  margin-left: -500px !important;
+                  position: absolute;
+              }
+              #at4-share.addthis-animated {
+                animation-duration: 0s !important;
+              }
+              #at4-scc {
+                  display: none !important;
+              }
+            `}</style>
             <img src={post.cover} alt={post.coverCaption} title={post.coverCaption} className='my-6 w-full' />
             {children}
           </article>

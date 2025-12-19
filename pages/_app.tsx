@@ -13,6 +13,8 @@ import Layout from '@/components/layout/Layout';
 import NavBar from '@/components/navigation/NavBar';
 import StickyNavbar from '@/components/navigation/StickyNavbar';
 import AppContext from '@/context/AppContext';
+import { SpecVersionProvider } from '@/context/SpecVersionContext';
+import { MDXProvider } from '@/components/MDX/MDX';
 
 /**
  * @description The MyApp component is the root component for the application.
@@ -20,26 +22,30 @@ import AppContext from '@/context/AppContext';
 function MyApp({ Component, pageProps, router }: AppProps) {
   return (
     <AppContext.Provider value={{ path: router.asPath }}>
-      {/* <MDXProvider components={mdxComponents}> */}
-      <Head>
-        <script async defer src='https://buttons.github.io/buttons.js'></script>
-      </Head>
-      <AlgoliaSearch>
-        <div className='flex min-h-screen flex-col'>
-          <Banner />
-          <StickyNavbar>
-            <NavBar className='mx-auto block max-w-screen-xl px-4 sm:px-6 lg:px-8' />
-          </StickyNavbar>
-          <Layout>
-            <Component {...pageProps} />
-            <ScrollButton />
-          </Layout>
-          <div className='mt-auto'>
-            <Footer />
-          </div>
-        </div>
-      </AlgoliaSearch>
-      {/* </MDXProvider> */}
+      <SpecVersionProvider>
+        <MDXProvider>
+          <Head>
+            <script async defer src='https://buttons.github.io/buttons.js' />
+          </Head>
+          <AlgoliaSearch>
+            <div className='flex min-h-screen flex-col'>
+              <Banner />
+              <StickyNavbar>
+                <NavBar className='mx-auto block max-w-screen-xl px-4 sm:px-6 lg:px-8' />
+              </StickyNavbar>
+              <Layout>
+                <div>
+                  <Component {...pageProps} />
+                </div>
+                <ScrollButton />
+              </Layout>
+              <div className='mt-auto'>
+                <Footer />
+              </div>
+            </div>
+          </AlgoliaSearch>
+        </MDXProvider>
+      </SpecVersionProvider>
     </AppContext.Provider>
   );
 }
